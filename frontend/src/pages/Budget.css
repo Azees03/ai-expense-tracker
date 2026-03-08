@@ -1,0 +1,53 @@
+.budget-page   { max-width: 1000px; }
+.budget-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.budget-form-card    { padding: 24px; }
+.budget-form-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.budget-form         { display: flex; flex-direction: column; gap: 14px; }
+
+.budget-list { display: flex; flex-direction: column; gap: 14px; }
+.budget-item { padding: 20px; }
+
+.budget-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.budget-cat      { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.budget-cat-name { font-weight: 600; font-size: 15px; }
+.budget-meta     { font-size: 12px; color: var(--text-muted); }
+
+.budget-amounts  { text-align: right; flex-shrink: 0; }
+.budget-spent    { font-size: 18px; font-weight: 700; }
+.budget-limit    { color: var(--text-muted); font-size: 13px; }
+
+.progress-bar {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.budget-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.budget-pct { font-weight: 600; }
+
+@media (max-width: 768px) {
+  .budget-layout { grid-template-columns: 1fr; }
+}

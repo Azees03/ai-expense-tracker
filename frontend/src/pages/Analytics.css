@@ -1,0 +1,35 @@
+.analytics-page { max-width: 1100px; }
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.analytics-card      { padding: 24px; }
+.analytics-card h3   { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.span-2              { grid-column: span 2; }
+
+.comparison-list     { display: flex; flex-direction: column; gap: 10px; }
+
+.comparison-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.comparison-right    { display: flex; align-items: center; gap: 12px; }
+.comp-curr           { font-weight: 600; }
+.comp-change         { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+.comp-change.up      { color: var(--danger);  background: #fef2f2; }
+.comp-change.down    { color: var(--success); background: #d1fae5; }
+.comp-change.neutral { color: var(--text-muted); background: var(--bg); }
+
+@media (max-width: 800px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+  .span-2         { grid-column: span 1; }
+}
