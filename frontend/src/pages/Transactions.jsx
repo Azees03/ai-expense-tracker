@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useExpenses } from "../context/ExpenseContext";
 import ExportButton from "../components/Export/ExportButton";
+import ReceiptScanner from "../components/Receipt/ReceiptScanner";
 import {
   CATEGORIES, PAYMENT_METHODS,
   formatCurrency, formatDate, getCategoryInfo,
@@ -19,6 +20,7 @@ export default function Transactions() {
 
   const [filters,     setFilters]     = useState({ category: "", search: "", page: 1 });
   const [showForm,    setShowForm]    = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [form,        setForm]        = useState(EMPTY_FORM);
   const [editId,      setEditId]      = useState(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -77,9 +79,17 @@ export default function Transactions() {
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <ExportButton expenses={expenses} label="Export" />
+          <button className="btn btn-ghost" onClick={() => setShowScanner(true)}>
+            🧾 Scan Receipt
+          </button>
           <button className="btn btn-primary" onClick={openAdd}>+ Add Expense</button>
         </div>
       </div>
+
+      {/* ── Receipt Scanner Modal ──────────────────────────────────── */}
+      {showScanner && (
+        <ReceiptScanner onClose={() => setShowScanner(false)} />
+      )}
 
       {/* ── Filters ─────────────────────────────────────────────── */}
       <div className="card filters-card">

@@ -25,3 +25,15 @@ export const authAPI = {
 export const chatAPI = {
   send: (messages) => client.post("/chat", { messages }),
 };
+
+export const receiptAPI = {
+  // file: File object (image or PDF)
+  scan: (file) => {
+    const form = new FormData();
+    form.append("receipt", file);
+    return client.post("/receipts/scan", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  save: (data) => client.post("/receipts/save", data),
+};

@@ -549,9 +549,6 @@ RESPONSE STYLE
 • If something goes wrong, explain what happened and suggest a fix`;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HISTORY BUILDER — ensures valid alternating user/model turns for Gemini
-// ═══════════════════════════════════════════════════════════════════════════
 
 function buildHistory(messages) {
   // messages is the full array; last item is the current user message — exclude it
@@ -586,13 +583,9 @@ function buildHistory(messages) {
   return clean;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════════════════════════════
-
 async function runAIChat(messages, userId) {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-lite",
     systemInstruction: buildSystemPrompt(),
     tools: TOOLS,
     generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },
