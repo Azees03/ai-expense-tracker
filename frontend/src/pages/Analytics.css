@@ -33,3 +33,8 @@
   .analytics-grid { grid-template-columns: 1fr; }
   .span-2         { grid-column: span 1; }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .comparison-item   { background: #0f172a; }
+[data-theme="dark"] .comp-change.up    { background: rgba(239,68,68,0.15); }
+[data-theme="dark"] .comp-change.down  { background: rgba(16,185,129,0.15); }

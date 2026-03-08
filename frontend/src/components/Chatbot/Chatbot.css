@@ -177,3 +177,11 @@
 @media (max-width: 600px) {
   .chatbot { width: 100%; }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .chatbot            { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .message.assistant .msg-bubble { background: #0f172a; border-color: #334155; }
+[data-theme="dark"] .quick-btn         { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .quick-btn:hover   { background: #1e1b4b; border-color: #818cf8; color: #818cf8; }
+[data-theme="dark"] .chat-input        { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .chat-input-area   { border-color: #334155; }

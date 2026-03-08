@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import "./Sidebar.css";
 
 const navItems = [
@@ -11,6 +12,7 @@ const navItems = [
 
 export default function Sidebar({ chatOpen, setChatOpen }) {
   const { user, logout } = useAuth();
+  const { dark, toggle } = useTheme();
 
   return (
     <aside className="sidebar">
@@ -32,9 +34,8 @@ export default function Sidebar({ chatOpen, setChatOpen }) {
         ))}
 
         <button
-          className={`nav-item${chatOpen ? " active" : ""}`}
+          className={`nav-item ai-assistant-btn${chatOpen ? " active" : ""}`}
           onClick={() => setChatOpen((o) => !o)}
-          style={{ marginTop: "8px" }}
         >
           <span className="nav-icon">🤖</span>
           <span>AI Assistant</span>
@@ -45,12 +46,27 @@ export default function Sidebar({ chatOpen, setChatOpen }) {
       <div className="sidebar-footer">
         <div className="user-info">
           <div className="user-avatar">{user?.name?.[0]?.toUpperCase()}</div>
-          <div style={{ minWidth: 0 }}>
+          <div className="user-details">
             <div className="user-name">{user?.name}</div>
             <div className="user-email">{user?.email}</div>
           </div>
         </div>
-        <button className="logout-btn" onClick={logout}>⏏ Logout</button>
+        
+        <div className="footer-actions">
+          <button
+            className="theme-toggle-footer"
+            onClick={toggle}
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {dark ? "☀️" : "🌙"}
+            <span>{dark ? "Light" : "Dark"} Mode</span>
+          </button>
+          
+          <button className="logout-btn" onClick={logout}>
+            <span>⏏</span>
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

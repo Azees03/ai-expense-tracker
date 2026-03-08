@@ -78,3 +78,7 @@
 @media (max-width: 600px) {
   .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .recent-item       { background: #0f172a; }
+[data-theme="dark"] .stat-card         { background: #1e293b; }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useExpenses } from "../context/ExpenseContext";
+import ExportButton from "../components/Export/ExportButton";
 import {
   CATEGORIES, PAYMENT_METHODS,
   formatCurrency, formatDate, getCategoryInfo,
@@ -25,7 +26,7 @@ export default function Transactions() {
 
   useEffect(() => { fetchExpenses(filters); }, [filters, fetchExpenses]);
 
-  const openAdd  = () => { setForm(EMPTY_FORM); setEditId(null); setFormError(""); setShowForm(true); };
+  const openAdd   = () => { setForm(EMPTY_FORM); setEditId(null); setFormError(""); setShowForm(true); };
   const closeForm = () => { setShowForm(false); setEditId(null); setFormError(""); };
 
   const handleSubmit = async (e) => {
@@ -61,7 +62,7 @@ export default function Transactions() {
     if (window.confirm("Delete this expense?")) await deleteExpense(id);
   };
 
-  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const upd = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   return (
     <div className="transactions-page">
@@ -74,7 +75,10 @@ export default function Transactions() {
           <h1>Transactions</h1>
           <p>Manage all your expenses</p>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>+ Add Expense</button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <ExportButton expenses={expenses} label="Export" />
+          <button className="btn btn-primary" onClick={openAdd}>+ Add Expense</button>
+        </div>
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────── */}
@@ -104,27 +108,25 @@ export default function Transactions() {
           <div className="modal card" onClick={(e) => e.stopPropagation()}>
             <h3>{editId ? "Edit Expense" : "Add Expense"}</h3>
 
-            {formError && <div className="auth-error">{formError}</div>}
+            {formError && <div className="auth-error" style={{ marginBottom: 16 }}>{formError}</div>}
 
             <form onSubmit={handleSubmit} className="expense-form">
               <div className="form-row">
                 <div className="form-group">
                   <label>Amount (₹)</label>
-                  <input
-                    type="number" min="0" step="0.01" placeholder="0.00"
-                    value={form.amount} onChange={update("amount")} required
-                  />
+                  <input type="number" min="0" step="0.01" placeholder="0.00"
+                    value={form.amount} onChange={upd("amount")} required />
                 </div>
                 <div className="form-group">
                   <label>Date</label>
-                  <input type="date" value={form.date} onChange={update("date")} required />
+                  <input type="date" value={form.date} onChange={upd("date")} required />
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
                   <label>Category</label>
-                  <select value={form.category} onChange={update("category")}>
+                  <select value={form.category} onChange={upd("category")}>
                     {CATEGORIES.map((c) => (
                       <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
                     ))}
@@ -132,28 +134,22 @@ export default function Transactions() {
                 </div>
                 <div className="form-group">
                   <label>Payment Method</label>
-                  <select value={form.payment_method} onChange={update("payment_method")}>
-                    {PAYMENT_METHODS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
+                  <select value={form.payment_method} onChange={upd("payment_method")}>
+                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="form-group">
                 <label>Description</label>
-                <input
-                  type="text" placeholder="What was this for?"
-                  value={form.description} onChange={update("description")}
-                />
+                <input type="text" placeholder="What was this for?"
+                  value={form.description} onChange={upd("description")} />
               </div>
 
               <div className="form-group">
                 <label>Merchant</label>
-                <input
-                  type="text" placeholder="Store / restaurant name"
-                  value={form.merchant} onChange={update("merchant")}
-                />
+                <input type="text" placeholder="Store / restaurant name"
+                  value={form.merchant} onChange={upd("merchant")} />
               </div>
 
               <div className="form-actions">
@@ -193,10 +189,8 @@ export default function Transactions() {
                   <tr key={exp.id}>
                     <td>{formatDate(exp.date)}</td>
                     <td>
-                      <span
-                        className="cat-badge"
-                        style={{ background: cat.color + "18", color: cat.color }}
-                      >
+                      <span className="cat-badge"
+                        style={{ background: cat.color + "18", color: cat.color }}>
                         {cat.icon} {cat.label}
                       </span>
                     </td>

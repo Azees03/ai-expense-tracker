@@ -144,3 +144,14 @@
 @media (max-width: 700px) {
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .expense-table th      { background: #0f172a; border-color: #334155; }
+[data-theme="dark"] .expense-table td      { border-color: #334155; }
+[data-theme="dark"] .expense-table tbody tr:hover td { background: #0f172a; }
+[data-theme="dark"] .modal-overlay         { background: rgba(0,0,0,0.65); }
+[data-theme="dark"] .modal                 { background: #1e293b; }
+[data-theme="dark"] .filter-input,
+[data-theme="dark"] .filter-select         { background: #0f172a; border-color: #334155; color: #f1f5f9; color-scheme: dark; }
+[data-theme="dark"] .action-btn            { background: #0f172a; border-color: #334155; }
+[data-theme="dark"] .action-btn:hover      { background: #334155; }

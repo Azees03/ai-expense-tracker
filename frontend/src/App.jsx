@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth }   from "./context/AuthContext";
+import { ThemeProvider }           from "./context/ThemeContext";
 import { ExpenseProvider }         from "./context/ExpenseContext";
 import Layout                      from "./components/Layout/Layout";
 import Login                       from "./components/Auth/Login";
@@ -14,7 +15,7 @@ function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading)
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <div style={{ display:"flex", justifyContent:"center", alignItems:"center", height:"100vh" }}>
         <div className="spinner" />
       </div>
     );
@@ -44,7 +45,6 @@ function AppRoutes() {
         <Route path="analytics"    element={<Analytics />} />
       </Route>
 
-      {/* Catch-all */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
@@ -53,9 +53,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

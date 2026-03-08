@@ -51,3 +51,7 @@
 }
 .auth-link a { color: var(--primary); font-weight: 600; }
 .auth-link a:hover { text-decoration: underline; }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .auth-page { background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%); }
+[data-theme="dark"] .auth-card { background: #1e293b; border-color: #334155; }

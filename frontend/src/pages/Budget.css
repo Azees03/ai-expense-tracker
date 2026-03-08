@@ -51,3 +51,6 @@
 @media (max-width: 768px) {
   .budget-layout { grid-template-columns: 1fr; }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+[data-theme="dark"] .progress-bar      { background: #0f172a; }
