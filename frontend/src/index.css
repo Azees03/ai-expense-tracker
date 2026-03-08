@@ -154,36 +154,18 @@ a         { text-decoration: none; color: inherit; }
 
 /* ── Theme toggle button ─────────────────────────────────────────────── */
 .theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 6px 12px;
-  height: 34px;
-
-  border-radius: 20px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  background: var(--bg);
   border: 1px solid var(--border);
-
-  background: var(--bg-card);
-  color: var(--text);
-
-  font-size: 14px;
-  font-weight: 500;
-
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
-
-  margin-left: auto; /* pushes button to right side */
+  transition: all 0.15s;
+  flex-shrink: 0;
 }
-
-.theme-toggle:hover {
-  background: var(--bg-hover);
-  border-color: var(--primary);
-}
-
-.theme-toggle:active {
-  transform: scale(0.96);
-}
+.theme-toggle:hover { background: var(--bg-hover); color: var(--text); }
 
 /* ── Export dropdown ─────────────────────────────────────────────────── */
 .export-wrapper      { position: relative; display: inline-block; }
