@@ -40,7 +40,58 @@ CREATE TABLE IF NOT EXISTS budgets (
   UNIQUE(user_id, category)
 );
 
--- 4. Disable RLS (we handle auth ourselves with JWT)
-ALTER TABLE users    DISABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
-ALTER TABLE budgets  DISABLE ROW LEVEL SECURITY;
+-- 4. GROUPS table
+CREATE TABLE IF NOT EXISTS groups (
+  id         BIGSERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,
+  created_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. GROUP_MEMBERS table
+CREATE TABLE IF NOT EXISTS group_members (
+  group_id   BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at  TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (group_id, user_id)
+);
+
+-- 6. GROUP_EXPENSES table
+CREATE TABLE IF NOT EXISTS group_expenses (
+  id          BIGSERIAL PRIMARY KEY,
+  group_id    BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  paid_by     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount      NUMERIC(12, 2) NOT NULL,
+  description TEXT NOT NULL,
+  date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. GROUP_EXPENSE_SPLITS table
+CREATE TABLE IF NOT EXISTS group_expense_splits (
+  id          BIGSERIAL PRIMARY KEY,
+  expense_id  BIGINT NOT NULL REFERENCES group_expenses(id) ON DELETE CASCADE,
+  user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount_owed NUMERIC(12, 2) NOT NULL
+);
+
+-- 8. SETTLEMENTS table
+CREATE TABLE IF NOT EXISTS settlements (
+  id          BIGSERIAL PRIMARY KEY,
+  group_id    BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  paid_by     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  paid_to     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount      NUMERIC(12, 2) NOT NULL,
+  date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Disable RLS (we handle auth ourselves with JWT)
+ALTER TABLE users                DISABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses             DISABLE ROW LEVEL SECURITY;
+ALTER TABLE budgets              DISABLE ROW LEVEL SECURITY;
+ALTER TABLE groups               DISABLE ROW LEVEL SECURITY;
+ALTER TABLE group_members        DISABLE ROW LEVEL SECURITY;
+ALTER TABLE group_expenses       DISABLE ROW LEVEL SECURITY;
+ALTER TABLE group_expense_splits DISABLE ROW LEVEL SECURITY;
+ALTER TABLE settlements          DISABLE ROW LEVEL SECURITY;

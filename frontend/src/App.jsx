@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth }   from "./context/AuthContext";
 import { ThemeProvider }           from "./context/ThemeContext";
 import { ExpenseProvider }         from "./context/ExpenseContext";
+import { GroupProvider }           from "./context/GroupContext";
 import Layout                      from "./components/Layout/Layout";
 import Login                       from "./components/Auth/Login";
 import Signup                      from "./components/Auth/Signup";
@@ -9,6 +10,8 @@ import Dashboard                   from "./pages/Dashboard";
 import Transactions                from "./pages/Transactions";
 import Budget                      from "./pages/Budget";
 import Analytics                   from "./pages/Analytics";
+import Groups                      from "./pages/Groups";
+import GroupDetails                from "./pages/GroupDetails";
 import "./index.css";
 
 function PrivateRoute({ children }) {
@@ -33,7 +36,9 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <ExpenseProvider>
-              <Layout />
+              <GroupProvider>
+                <Layout />
+              </GroupProvider>
             </ExpenseProvider>
           </PrivateRoute>
         }
@@ -43,6 +48,8 @@ function AppRoutes() {
         <Route path="transactions" element={<Transactions />} />
         <Route path="budget"       element={<Budget />} />
         <Route path="analytics"    element={<Analytics />} />
+        <Route path="groups"       element={<Groups />} />
+        <Route path="groups/:id"   element={<GroupDetails />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

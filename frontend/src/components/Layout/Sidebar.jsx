@@ -6,19 +6,21 @@ import "./Sidebar.css";
 const navItems = [
   { to: "/dashboard",    icon: "📊", label: "Dashboard"    },
   { to: "/transactions", icon: "💳", label: "Transactions" },
+  { to: "/groups",       icon: "👥", label: "Groups"       },
   { to: "/budget",       icon: "🎯", label: "Budget"       },
   { to: "/analytics",   icon: "📈", label: "Analytics"    },
 ];
 
-export default function Sidebar({ chatOpen, setChatOpen }) {
+export default function Sidebar({ chatOpen, setChatOpen, mobileOpen, onClose }) {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${mobileOpen ? " mobile-open" : ""}`}>
       <div className="sidebar-logo">
         <span className="logo-icon">💰</span>
         <span className="logo-text">SpendSmart</span>
+        {mobileOpen && <button className="close-sidebar-btn" onClick={onClose}>✕</button>}
       </div>
 
       <nav className="sidebar-nav">
@@ -27,6 +29,7 @@ export default function Sidebar({ chatOpen, setChatOpen }) {
             key={item.to}
             to={item.to}
             className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
+            onClick={onClose}
           >
             <span className="nav-icon">{item.icon}</span>
             <span>{item.label}</span>

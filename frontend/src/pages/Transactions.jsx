@@ -115,13 +115,13 @@ export default function Transactions() {
       {/* ── Add / Edit Modal ─────────────────────────────────────── */}
       {showForm && (
         <div className="modal-overlay" onClick={closeForm}>
-          <div className="modal card" onClick={(e) => e.stopPropagation()}>
-            <h3>{editId ? "Edit Expense" : "Add Expense"}</h3>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>{editId ? "Edit Expense" : "Add Expense"}</h2>
 
             {formError && <div className="auth-error" style={{ marginBottom: 16 }}>{formError}</div>}
 
             <form onSubmit={handleSubmit} className="expense-form">
-              <div className="form-row">
+              <div className="form-row" style={{ marginBottom: "16px" }}>
                 <div className="form-group">
                   <label>Amount (₹)</label>
                   <input type="number" min="0" step="0.01" placeholder="0.00"
@@ -133,7 +133,7 @@ export default function Transactions() {
                 </div>
               </div>
 
-              <div className="form-row">
+              <div className="form-row" style={{ marginBottom: "16px" }}>
                 <div className="form-group">
                   <label>Category</label>
                   <select value={form.category} onChange={upd("category")}>
@@ -150,20 +150,20 @@ export default function Transactions() {
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: "16px" }}>
                 <label>Description</label>
                 <input type="text" placeholder="What was this for?"
                   value={form.description} onChange={upd("description")} />
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: "16px" }}>
                 <label>Merchant</label>
                 <input type="text" placeholder="Store / restaurant name"
                   value={form.merchant} onChange={upd("merchant")} />
               </div>
 
-              <div className="form-actions">
-                <button type="button" className="btn btn-ghost" onClick={closeForm}>Cancel</button>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-text" onClick={closeForm}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={formLoading}>
                   {formLoading ? <span className="spinner" /> : editId ? "Update" : "Add Expense"}
                 </button>

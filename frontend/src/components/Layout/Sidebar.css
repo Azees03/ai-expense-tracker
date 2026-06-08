@@ -240,7 +240,19 @@
   position: fixed;
   left: 0;
   top: 0;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform 0.3s ease;
+  z-index: 1000;
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  }
 }
 
 .sidebar-logo {

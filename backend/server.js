@@ -7,6 +7,7 @@ const expenseRoutes = require("./routes/expenses");
 const budgetRoutes  = require("./routes/budget");
 const chatRoutes    = require("./routes/chat");
 const receiptRoutes = require("./routes/receipts");
+const groupRoutes   = require("./routes/groups");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/budgets",  budgetRoutes);
 app.use("/api/chat",     chatRoutes);
 app.use("/api/receipts", receiptRoutes);
+app.use("/api/groups",   groupRoutes);
 
 app.get("/api/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date().toISOString() })

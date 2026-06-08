@@ -21,5 +21,67 @@
 }
 
 @media (max-width: 600px) {
-  .main-content { margin-left: 0; padding: 16px; }
+  .main-content { margin-left: 0; padding: 16px; padding-top: 80px; }
+}
+
+/* ── Mobile Header ──────────────────────────────────────────────────── */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 500;
+}
+
+@media (max-width: 600px) {
+  .mobile-header { display: flex; }
+}
+
+.menu-toggle, .mobile-chat-toggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.mobile-logo {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 900;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.close-sidebar-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
 }

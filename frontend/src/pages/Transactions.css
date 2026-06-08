@@ -25,41 +25,6 @@
 .filter-input:focus,
 .filter-select:focus  { border-color: var(--primary); }
 
-/* ── Modal ────────────────────────────────────────────────────────── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: 20px;
-}
-
-.modal {
-  width: 100%;
-  max-width: 520px;
-  padding: 28px;
-  animation: modalIn 0.2s ease;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(-12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.modal h3       { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-.expense-form   { display: flex; flex-direction: column; gap: 16px; }
-.form-row       { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
 /* ── Table ────────────────────────────────────────────────────────── */
 .table-card    { overflow: hidden; }
 .table-loading { display: flex; justify-content: center; padding: 60px; }
