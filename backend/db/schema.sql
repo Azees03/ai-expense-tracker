@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS group_expenses (
   amount      NUMERIC(12, 2) NOT NULL,
   description TEXT NOT NULL,
   date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  split_method TEXT NOT NULL DEFAULT 'equal',
+  split_data  JSONB,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -5,22 +5,43 @@ import { useAuth } from "../context/AuthContext";
 import { groupAPI } from "../api/groups";
 import "./GroupDetails.css";
 
+const SPLIT_METHODS = [
+  { value: "equal", label: "Equally" },
+  { value: "exact", label: "Exact amounts" },
+  { value: "percentage", label: "Percentages" },
+  { value: "shares", label: "Shares" },
+  { value: "adjustment", label: "Equal with adjustment" },
+];
+
 export default function GroupDetails() {
   const { id } = useParams();
   const { user } = useAuth();
   const { currentGroup, fetchGroupDetails, loading } = useGroups();
-  
-  const [activeTab, setActiveTab] = useState("expenses"); // expenses | balances
-  const [balances, setBalances] = useState([]);
+
+  const [activeTab, setActiveTab] = useState("expenses");
+  const [balancesData, setBalancesData] = useState([]);
+  const [settlementPlan, setSettlementPlan] = useState([]);
+  const [verification, setVerification] = useState(null);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
-  
+
   // Form states
   const [memberEmail, setMemberEmail] = useState("");
   const [editExpenseId, setEditExpenseId] = useState(null);
-  const [expenseForm, setExpenseForm] = useState({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
-  const [settleForm, setSettleForm] = useState({ paid_to: "", amount: "", date: new Date().toISOString().split("T")[0] });
+  const [splitMethod, setSplitMethod] = useState("equal");
+  const [splitData, setSplitData] = useState({});
+  const [expenseForm, setExpenseForm] = useState({
+    description: "",
+    amount: "",
+    date: new Date().toISOString().split("T")[0],
+    paid_by: user?.id
+  });
+  const [settleForm, setSettleForm] = useState({
+    paid_to: "",
+    amount: "",
+    date: new Date().toISOString().split("T")[0]
+  });
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,7 +53,9 @@ export default function GroupDetails() {
   const loadBalances = async () => {
     try {
       const data = await groupAPI.getBalances(id);
-      setBalances(data);
+      setBalancesData(data.balances || data);
+      setVerification(data.verification || null);
+      setSettlementPlan(data.settlementPlan || []);
     } catch (err) {
       console.error(err);
     }
@@ -53,6 +76,18 @@ export default function GroupDetails() {
     }
   };
 
+  const resetExpenseForm = () => {
+    setEditExpenseId(null);
+    setExpenseForm({
+      description: "",
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      paid_by: user?.id
+    });
+    setSplitMethod("equal");
+    setSplitData({});
+  };
+
   const handleEdit = (exp) => {
     setEditExpenseId(exp.id);
     setExpenseForm({
@@ -61,26 +96,60 @@ export default function GroupDetails() {
       date: exp.date?.split("T")[0] || "",
       paid_by: exp.paid_by
     });
+    setSplitMethod(exp.split_method || "equal");
+    setSplitData(exp.split_data || {});
     setShowExpenseModal(true);
   };
 
   const openAddExpense = () => {
-    setEditExpenseId(null);
-    setExpenseForm({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
+    resetExpenseForm();
     setShowExpenseModal(true);
+  };
+
+  const buildPayload = () => {
+    const payload = {
+      description: expenseForm.description,
+      amount: parseFloat(expenseForm.amount),
+      date: expenseForm.date,
+      paid_by: expenseForm.paid_by,
+      split_method: splitMethod,
+    };
+    if (splitMethod !== "equal" && Object.keys(splitData).length > 0) {
+      payload.split_data = splitData;
+    }
+    return payload;
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (editExpenseId) {
-        await groupAPI.updateExpense(id, editExpenseId, expenseForm);
-      } else {
-        await groupAPI.addExpense(id, expenseForm);
+      const payload = buildPayload();
+
+      // Client-side validation for exact/percentage/shares
+      if (splitMethod === "exact" && splitData.amounts) {
+        const total = Object.values(splitData.amounts).reduce((s, v) => s + parseFloat(v || 0), 0);
+        if (Math.abs(total - parseFloat(expenseForm.amount)) > 0.01) {
+          alert(`Exact amounts total ₹${total.toFixed(2)}, but bill is ₹${parseFloat(expenseForm.amount).toFixed(2)}. Adjust amounts.`);
+          setSubmitting(false);
+          return;
+        }
       }
-      setExpenseForm({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
-      setEditExpenseId(null);
+      if (splitMethod === "percentage" && splitData.percentages) {
+        const total = Object.values(splitData.percentages).reduce((s, v) => s + parseFloat(v || 0), 0);
+        if (Math.abs(total - 100) > 0.01) {
+          alert(`Percentages total ${total}%, must be 100%.`);
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      if (editExpenseId) {
+        await groupAPI.updateExpense(id, editExpenseId, payload);
+      } else {
+        await groupAPI.addExpense(id, payload);
+      }
+      resetExpenseForm();
       setShowExpenseModal(false);
       fetchGroupDetails(id);
       loadBalances();
@@ -107,13 +176,36 @@ export default function GroupDetails() {
     }
   };
 
+  const updateSplitEntry = (key, value) => {
+    const field = splitMethod === "exact" ? "amounts"
+      : splitMethod === "percentage" ? "percentages"
+      : splitMethod === "shares" ? "shares"
+      : splitMethod === "adjustment" ? "adjustments"
+      : null;
+    if (!field) return;
+    setSplitData(prev => ({
+      ...prev,
+      [field]: { ...(prev[field] || {}), [key]: value }
+    }));
+  };
+
+  const getSplitValue = (userId) => {
+    const field = splitMethod === "exact" ? "amounts"
+      : splitMethod === "percentage" ? "percentages"
+      : splitMethod === "shares" ? "shares"
+      : splitMethod === "adjustment" ? "adjustments"
+      : null;
+    if (!field || !splitData[field]) return "";
+    return splitData[field][userId] ?? "";
+  };
+
   if (loading && !currentGroup) return <div className="loading-container"><div className="spinner" /></div>;
   if (!currentGroup) return <div className="error-container">Group not found. <Link to="/groups">Go back</Link></div>;
 
   return (
     <div className="group-details-page">
       <Link to="/groups" className="back-link">← Back to Groups</Link>
-      
+
       <header className="group-header">
         <div className="header-main">
           <h1>{currentGroup.name}</h1>
@@ -154,7 +246,12 @@ export default function GroupDetails() {
                     ) : (
                       <>
                         <p className="desc">{item.description}</p>
-                        <p className="meta">Paid by {item.users?.name}</p>
+                        <p className="meta">
+                          Paid by {item.users?.name}
+                          {item.split_method && item.split_method !== "equal" && (
+                            <span className="split-badge"> · {item.split_method}</span>
+                          )}
+                        </p>
                       </>
                     )}
                   </div>
@@ -173,16 +270,63 @@ export default function GroupDetails() {
             )}
           </div>
         ) : (
-          <div className="balances-list">
-            {balances.map(b => (
-              <div key={b.user_id} className="balance-item">
-                <div className="user-avatar">{b.name[0]}</div>
-                <div className="user-name">{b.name} {b.user_id === user.id && "(You)"}</div>
-                <div className={`user-status ${b.balance > 0 ? "positive" : b.balance < 0 ? "negative" : ""}`}>
-                  {b.balance > 0 ? `is owed ₹${b.balance}` : b.balance < 0 ? `owes ₹${Math.abs(b.balance)}` : "is settled up"}
+          <div className="balances-section">
+            {/* Math Verification */}
+            {verification && (
+              <div className="verification-card">
+                <h4>Math Verification</h4>
+                <div className="verification-row">
+                  <span>Total payments</span><span>₹{verification.totalPaid.toFixed(2)}</span>
+                </div>
+                <div className="verification-row">
+                  <span>Total splits</span><span>₹{verification.totalSplit.toFixed(2)}</span>
+                </div>
+                <div className="verification-row diff">
+                  <span>Difference</span>
+                  <span className={verification.difference === 0 ? "ok" : "err"}>
+                    ₹{verification.difference.toFixed(2)}
+                    {verification.difference === 0 && " ✓"}
+                  </span>
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Net Balances */}
+            <h4 className="section-title">Net Balances</h4>
+            <div className="balances-list">
+              {balancesData.map(b => (
+                <div key={b.user_id} className="balance-item">
+                  <div className="user-avatar">{b.name?.[0]}</div>
+                  <div className="user-name">{b.name} {b.user_id === user.id && "(You)"}</div>
+                  <div className={`user-status ${b.balance > 0 ? "positive" : b.balance < 0 ? "negative" : ""}`}>
+                    {b.balance > 0
+                      ? `+ ₹${b.balance} (owed)`
+                      : b.balance < 0
+                        ? `- ₹${Math.abs(b.balance)} (owes)`
+                        : "Settled ✓"}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Settlement Plan */}
+            {settlementPlan.length > 0 && (
+              <>
+                <h4 className="section-title">Settlement Plan (Simplify Debts)</h4>
+                <div className="settlement-plan">
+                  {settlementPlan.map((t, i) => (
+                    <div key={i} className="settlement-item">
+                      <span className="settle-from">{t.fromName}</span>
+                      <span className="settle-arrow">pays</span>
+                      <span className="settle-to">{t.toName}</span>
+                      <span className="settle-amount">₹{t.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {balancesData.length === 0 && <p className="empty-msg">No expenses yet.</p>}
           </div>
         )}
       </main>
@@ -218,7 +362,7 @@ export default function GroupDetails() {
               </div>
               <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
                 <div className="form-group">
-                  <label>Amount (₹)</label>
+                  <label>Amount</label>
                   <input type="number" step="0.01" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} placeholder="0.00" required />
                 </div>
                 <div className="form-group">
@@ -234,7 +378,44 @@ export default function GroupDetails() {
                   ))}
                 </select>
               </div>
-              <p className="split-note">This expense will be split equally among all members.</p>
+
+              {/* Split Method Selector */}
+              <div className="form-group" style={{ marginBottom: "16px" }}>
+                <label>Split Method</label>
+                <select value={splitMethod} onChange={e => { setSplitMethod(e.target.value); setSplitData({}); }}>
+                  {SPLIT_METHODS.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dynamic Split Inputs */}
+              {splitMethod !== "equal" && (
+                <div className="split-inputs">
+                  {currentGroup.members?.map(m => (
+                    <div key={m.id} className="split-input-row">
+                      <span className="split-label">
+                        {m.name} {m.id === user.id && "(You)"} <strong>owes</strong>
+                      </span>
+                      <div className="split-input-wrap">
+                        <input
+                          type="number"
+                          step={splitMethod === "percentage" ? "1" : "0.01"}
+                          min="0"
+                          placeholder={splitMethod === "exact" ? "Amount"
+                            : splitMethod === "percentage" ? "%"
+                            : splitMethod === "shares" ? "Shares"
+                            : "Adjustment"}
+                          value={getSplitValue(m.id)}
+                          onChange={e => updateSplitEntry(m.id, e.target.value)}
+                        />
+                        {splitMethod === "percentage" && <span className="split-suffix">%</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="modal-actions">
                 <button type="button" className="btn btn-text" onClick={() => setShowExpenseModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={submitting}>
@@ -263,7 +444,7 @@ export default function GroupDetails() {
               </div>
               <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
                 <div className="form-group">
-                  <label>Amount (₹)</label>
+                  <label>Amount</label>
                   <input type="number" step="0.01" value={settleForm.amount} onChange={e => setSettleForm({...settleForm, amount: e.target.value})} placeholder="0.00" required />
                 </div>
                 <div className="form-group">

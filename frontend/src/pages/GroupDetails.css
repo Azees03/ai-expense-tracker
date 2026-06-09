@@ -274,6 +274,156 @@
   margin-bottom: 1.5rem;
 }
 
+/* Verification Card */
+.verification-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.verification-card h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.verification-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.verification-row.diff {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 8px;
+  font-weight: 700;
+}
+
+.verification-row .ok { color: var(--success); }
+.verification-row .err { color: var(--danger); }
+
+/* Balances Section */
+.balances-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.section-title {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Settlement Plan */
+.settlement-plan {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.settlement-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.settlement-item:last-child { border-bottom: none; }
+
+.settle-from { font-weight: 700; color: var(--danger); }
+.settle-to   { font-weight: 700; color: var(--success); }
+.settle-arrow { color: var(--text-muted); font-size: 0.85rem; }
+.settle-amount {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+/* Split Badge on expense meta */
+.split-badge {
+  font-style: italic;
+  color: var(--primary);
+  text-transform: capitalize;
+}
+
+/* Split Inputs in Modal */
+.split-inputs {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.split-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.split-label {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 120px;
+}
+
+.split-input-wrap input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  color: var(--text);
+  text-align: right;
+}
+
+.split-input-wrap input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.split-suffix {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .group-header {
     flex-direction: column;
