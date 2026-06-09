@@ -18,6 +18,7 @@ export default function GroupDetails() {
   
   // Form states
   const [memberEmail, setMemberEmail] = useState("");
+  const [editExpenseId, setEditExpenseId] = useState(null);
   const [expenseForm, setExpenseForm] = useState({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
   const [settleForm, setSettleForm] = useState({ paid_to: "", amount: "", date: new Date().toISOString().split("T")[0] });
 
@@ -46,23 +47,45 @@ export default function GroupDetails() {
       setShowMemberModal(false);
       fetchGroupDetails(id);
     } catch (err) {
-      alert(err.response?.data?.message || "Error adding member");
+      alert(err?.message || "Error adding member");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (exp) => {
+    setEditExpenseId(exp.id);
+    setExpenseForm({
+      description: exp.description,
+      amount: exp.amount,
+      date: exp.date?.split("T")[0] || "",
+      paid_by: exp.paid_by
+    });
+    setShowExpenseModal(true);
+  };
+
+  const openAddExpense = () => {
+    setEditExpenseId(null);
+    setExpenseForm({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
+    setShowExpenseModal(true);
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await groupAPI.addExpense(id, expenseForm);
+      if (editExpenseId) {
+        await groupAPI.updateExpense(id, editExpenseId, expenseForm);
+      } else {
+        await groupAPI.addExpense(id, expenseForm);
+      }
       setExpenseForm({ description: "", amount: "", date: new Date().toISOString().split("T")[0], paid_by: user?.id });
+      setEditExpenseId(null);
       setShowExpenseModal(false);
       fetchGroupDetails(id);
       loadBalances();
     } catch (err) {
-      alert(err.response?.data?.message || "Error adding expense");
+      alert(err?.message || "Error saving expense");
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +101,7 @@ export default function GroupDetails() {
       fetchGroupDetails(id);
       loadBalances();
     } catch (err) {
-      alert(err.response?.data?.message || "Error settling up");
+      alert(err?.message || "Error settling up");
     } finally {
       setSubmitting(false);
     }
@@ -103,7 +126,7 @@ export default function GroupDetails() {
         </div>
         <div className="header-actions">
           <button className="btn btn-ghost" onClick={() => setShowSettleModal(true)}>🤝 Settle Up</button>
-          <button className="btn btn-primary" onClick={() => setShowExpenseModal(true)}>+ Add Expense</button>
+          <button className="btn btn-primary" onClick={openAddExpense}>+ Add Expense</button>
         </div>
       </header>
 
@@ -135,8 +158,13 @@ export default function GroupDetails() {
                       </>
                     )}
                   </div>
-                  <div className={`activity-amount ${item.paid_to ? "settlement" : ""}`}>
-                    ₹{item.amount}
+                  <div className="activity-right">
+                    <div className={`activity-amount ${item.paid_to ? "settlement" : ""}`}>
+                      ₹{item.amount}
+                    </div>
+                    {!item.paid_to && (
+                      <button className="edit-btn" title="Edit Expense" onClick={() => handleEdit(item)}>✏️</button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -182,7 +210,7 @@ export default function GroupDetails() {
       {showExpenseModal && (
         <div className="modal-overlay" onClick={() => setShowExpenseModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add Shared Expense</h2>
+            <h2>{editExpenseId ? "Edit Shared Expense" : "Add Shared Expense"}</h2>
             <form onSubmit={handleAddExpense}>
               <div className="form-group" style={{ marginBottom: "16px" }}>
                 <label>Description</label>
@@ -209,7 +237,9 @@ export default function GroupDetails() {
               <p className="split-note">This expense will be split equally among all members.</p>
               <div className="modal-actions">
                 <button type="button" className="btn btn-text" onClick={() => setShowExpenseModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>Add Expense</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? "Saving..." : editExpenseId ? "Update Expense" : "Add Expense"}
+                </button>
               </div>
             </form>
           </div>

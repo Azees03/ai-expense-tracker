@@ -125,9 +125,20 @@ router.get("/:id", async (req, res) => {
 // Add a member to a group by email
 router.post("/:id/members", async (req, res) => {
   const gid = req.params.id;
+  const uid = req.user.id;
   const { email } = req.body;
 
   if (!email) return res.status(400).json({ message: "Email is required" });
+
+  // 0. Check if requester is a member
+  const { data: requester } = await supabase
+    .from("group_members")
+    .select("*")
+    .eq("group_id", gid)
+    .eq("user_id", uid)
+    .single();
+
+  if (!requester) return res.status(403).json({ message: "Only group members can add others" });
 
   // 1. Find the user by email
   const { data: user, error: userError } = await supabase
@@ -205,6 +216,85 @@ router.post("/:id/expenses", async (req, res) => {
   if (splitError) return res.status(500).json({ message: splitError.message });
 
   res.status(201).json(expense);
+});
+
+// ── PUT /api/groups/:id/expenses/:expenseId ──────────────────────────────────
+// Edit a shared expense and update splits
+router.put("/:id/expenses/:expenseId", async (req, res) => {
+  const gid = parseInt(req.params.id);
+  const eid = parseInt(req.params.expenseId);
+  const { amount, description, date, paid_by } = req.body;
+  const amountNum = parseFloat(amount);
+
+  console.log(`[Groups] Editing expense ${eid} in group ${gid}`);
+
+  if (!amount || !description || !date || !paid_by) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  // 1. Update the group expense
+  const { data: expense, error: expError } = await supabase
+    .from("group_expenses")
+    .update({
+      paid_by: parseInt(paid_by),
+      amount: amountNum,
+      description,
+      date
+    })
+    .eq("id", eid)
+    .eq("group_id", gid)
+    .select()
+    .single();
+
+  if (expError) {
+    console.error("[Groups] Update Expense Error:", expError);
+    return res.status(500).json({ message: expError.message });
+  }
+
+  if (!expense) {
+    return res.status(404).json({ message: "Expense not found" });
+  }
+
+  // 2. Recalculate splits (Equal splitting)
+  const { data: members, error: memError } = await supabase
+    .from("group_members")
+    .select("user_id")
+    .eq("group_id", gid);
+
+  if (memError) {
+    console.error("[Groups] Fetch Members Error:", memError);
+    return res.status(500).json({ message: memError.message });
+  }
+
+  const splitAmount = amountNum / members.length;
+
+  // 3. Delete old splits and insert new ones
+  const { error: delError } = await supabase
+    .from("group_expense_splits")
+    .delete()
+    .eq("expense_id", eid);
+
+  if (delError) {
+    console.error("[Groups] Delete Splits Error:", delError);
+    return res.status(500).json({ message: delError.message });
+  }
+
+  const splits = members.map(m => ({
+    expense_id: eid,
+    user_id: m.user_id,
+    amount_owed: splitAmount
+  }));
+
+  const { error: splitError } = await supabase
+    .from("group_expense_splits")
+    .insert(splits);
+
+  if (splitError) {
+    console.error("[Groups] Insert Splits Error:", splitError);
+    return res.status(500).json({ message: splitError.message });
+  }
+
+  res.json(expense);
 });
 
 // ── GET /api/groups/:id/balances ─────────────────────────────────────────────

@@ -585,7 +585,7 @@ function buildHistory(messages) {
 
 async function runAIChat(messages, userId) {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-1.5-flash",
     systemInstruction: buildSystemPrompt(),
     tools: TOOLS,
     generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },

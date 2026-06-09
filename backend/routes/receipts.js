@@ -34,7 +34,7 @@ router.post("/scan", upload.single("receipt"), async (req, res) => {
     return res.status(500).json({ message: "GEMINI_API_KEY is not configured." });
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const fileData = {
       inlineData: {
