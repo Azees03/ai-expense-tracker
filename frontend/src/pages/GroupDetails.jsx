@@ -410,7 +410,7 @@ export default function GroupDetails() {
                 <label>Description</label>
                 <input type="text" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} placeholder="e.g. Dinner" required autoFocus />
               </div>
-              <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+              <div className="form-row" style={{ marginBottom: "16px" }}>
                 <div className="form-group">
                   <label>Amount</label>
                   <input type="number" step="0.01" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} placeholder="0.00" required />
@@ -484,7 +484,7 @@ export default function GroupDetails() {
             <h2>Settle Up</h2>
             <p className="settle-modal-hint">Record a payment between members to settle debts.</p>
             <form onSubmit={handleSettle}>
-              <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+              <div className="form-row" style={{ marginBottom: "16px" }}>
                 <div className="form-group">
                   <label>Payer</label>
                   <select value={settleForm.paid_by} onChange={e => setSettleForm({...settleForm, paid_by: e.target.value})} required>
@@ -504,7 +504,7 @@ export default function GroupDetails() {
                   </select>
                 </div>
               </div>
-              <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+              <div className="form-row" style={{ marginBottom: "16px" }}>
                 <div className="form-group">
                   <label>Amount (₹)</label>
                   <input type="number" step="0.01" value={settleForm.amount} onChange={e => setSettleForm({...settleForm, amount: e.target.value})} placeholder="0.00" required />
