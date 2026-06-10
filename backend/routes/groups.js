@@ -248,7 +248,7 @@ router.get("/:id", async (req, res) => {
   // Fetch recent expenses
   const { data: expenses, error: expError } = await supabase
     .from("group_expenses")
-    .select("*, split_method, split_data, users!group_expenses_paid_by_fkey(id, name)")
+    .select("*, split_method, split_data, users!group_expenses_paid_by_fkey(id, name), creator:users!group_expenses_created_by_fkey!left(id, name)")
     .eq("group_id", gid)
     .order("date", { ascending: false })
     .order("created_at", { ascending: false });
@@ -352,6 +352,7 @@ router.post("/:id/expenses", async (req, res) => {
   const insertData = {
     group_id: gid,
     paid_by,
+    created_by: req.user.id,
     amount: amountNum,
     description,
     date,
@@ -400,6 +401,18 @@ router.put("/:id/expenses/:expenseId", async (req, res) => {
   if (!amount || !description || !date || !paid_by) {
     return res.status(400).json({ message: "Missing required fields" });
   }
+
+  // 0. Ownership check — only the person who added the expense can edit
+  const { data: existing } = await supabase
+    .from("group_expenses")
+    .select("created_by, paid_by")
+    .eq("id", eid)
+    .eq("group_id", gid)
+    .single();
+
+  if (!existing) return res.status(404).json({ message: "Expense not found" });
+  const ownerId = existing.created_by || existing.paid_by;
+  if (ownerId !== req.user.id) return res.status(403).json({ message: "You can only edit your own expenses" });
 
   // 1. Get members to compute splits
   const { data: members, error: memError } = await supabase
@@ -473,6 +486,44 @@ router.put("/:id/expenses/:expenseId", async (req, res) => {
   }
 
   res.json({ ...expense, verification: computed.verification });
+});
+
+// ── DELETE /api/groups/:id/expenses/:expenseId ───────────────────────────────
+// Delete a shared expense (only the person who paid can delete)
+router.delete("/:id/expenses/:expenseId", async (req, res) => {
+  const gid = parseInt(req.params.id);
+  const eid = parseInt(req.params.expenseId);
+
+  // Ownership check — only the person who added the expense can delete
+  const { data: existing } = await supabase
+    .from("group_expenses")
+    .select("created_by, paid_by")
+    .eq("id", eid)
+    .eq("group_id", gid)
+    .single();
+
+  if (!existing) return res.status(404).json({ message: "Expense not found" });
+  const ownerId = existing.created_by || existing.paid_by;
+  if (ownerId !== req.user.id) return res.status(403).json({ message: "You can only delete your own expenses" });
+
+  // Delete splits first, then the expense
+  const { error: delSplitError } = await supabase
+    .from("group_expense_splits")
+    .delete()
+    .eq("expense_id", eid);
+
+  if (delSplitError) return res.status(500).json({ message: delSplitError.message });
+
+  const { data: deleted, error: delExpError } = await supabase
+    .from("group_expenses")
+    .delete()
+    .eq("id", eid)
+    .select()
+    .single();
+
+  if (delExpError) return res.status(500).json({ message: delExpError.message });
+
+  res.json({ success: true, deleted });
 });
 
 // ── GET /api/groups/:id/balances ─────────────────────────────────────────────

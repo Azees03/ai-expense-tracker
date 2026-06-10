@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS group_expenses (
   id          BIGSERIAL PRIMARY KEY,
   group_id    BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   paid_by     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_by  BIGINT REFERENCES users(id),
   amount      NUMERIC(12, 2) NOT NULL,
   description TEXT NOT NULL,
   date        DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -68,6 +69,9 @@ CREATE TABLE IF NOT EXISTS group_expenses (
   split_data  JSONB,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add created_by column to existing group_expenses table (run once)
+ALTER TABLE group_expenses ADD COLUMN IF NOT EXISTS created_by BIGINT REFERENCES users(id);
 
 -- 7. GROUP_EXPENSE_SPLITS table
 CREATE TABLE IF NOT EXISTS group_expense_splits (

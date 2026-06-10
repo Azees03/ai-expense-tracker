@@ -38,9 +38,11 @@ export default function GroupDetails() {
     paid_by: user?.id
   });
   const [settleForm, setSettleForm] = useState({
+    paid_by: user?.id || "",
     paid_to: "",
     amount: "",
-    date: new Date().toISOString().split("T")[0]
+    date: new Date().toISOString().split("T")[0],
+    description: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +88,17 @@ export default function GroupDetails() {
     });
     setSplitMethod("equal");
     setSplitData({});
+  };
+
+  const handleDeleteExpense = async (expenseId) => {
+    if (!window.confirm("Delete this expense?")) return;
+    try {
+      await groupAPI.deleteExpense(id, expenseId);
+      fetchGroupDetails(id);
+      loadBalances();
+    } catch (err) {
+      alert(err?.message || "Error deleting expense");
+    }
   };
 
   const handleEdit = (exp) => {
@@ -164,8 +177,8 @@ export default function GroupDetails() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await groupAPI.addSettlement(id, { ...settleForm, paid_by: user.id });
-      setSettleForm({ paid_to: "", amount: "", date: new Date().toISOString().split("T")[0] });
+      await groupAPI.addSettlement(id, settleForm);
+      setSettleForm({ paid_by: user?.id || "", paid_to: "", amount: "", date: new Date().toISOString().split("T")[0], description: "" });
       setShowSettleModal(false);
       fetchGroupDetails(id);
       loadBalances();
@@ -174,6 +187,29 @@ export default function GroupDetails() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openSettleUp = () => {
+    const defaults = {
+      paid_by: user?.id || "",
+      paid_to: "",
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+    };
+    const settlement = settlementPlan.find(s => String(s.from) === String(user.id) || String(s.to) === String(user.id));
+    if (settlement) {
+      if (String(settlement.from) === String(user.id)) {
+        defaults.paid_by = user.id;
+        defaults.paid_to = settlement.to;
+      } else {
+        defaults.paid_by = settlement.from;
+        defaults.paid_to = user.id;
+      }
+      defaults.amount = settlement.amount;
+    }
+    setSettleForm(defaults);
+    setShowSettleModal(true);
   };
 
   const updateSplitEntry = (key, value) => {
@@ -217,7 +253,7 @@ export default function GroupDetails() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn btn-ghost" onClick={() => setShowSettleModal(true)}>🤝 Settle Up</button>
+          <button className="btn btn-ghost" onClick={openSettleUp}>🤝 Settle Up</button>
           <button className="btn btn-primary" onClick={openAddExpense}>+ Add Expense</button>
         </div>
       </header>
@@ -260,7 +296,12 @@ export default function GroupDetails() {
                       ₹{item.amount}
                     </div>
                     {!item.paid_to && (
-                      <button className="edit-btn" title="Edit Expense" onClick={() => handleEdit(item)}>✏️</button>
+                      Number(item.created_by || item.paid_by) === Number(user.id)
+                    ) && (
+                      <>
+                        <button className="edit-btn" title="Edit Expense" onClick={() => handleEdit(item)}>✏️</button>
+                        <button className="edit-btn" title="Delete Expense" onClick={() => handleDeleteExpense(item.id)}>🗑️</button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -271,39 +312,38 @@ export default function GroupDetails() {
           </div>
         ) : (
           <div className="balances-section">
-            {/* Math Verification */}
-            {verification && (
-              <div className="verification-card">
-                <h4>Math Verification</h4>
-                <div className="verification-row">
-                  <span>Total payments</span><span>₹{verification.totalPaid.toFixed(2)}</span>
-                </div>
-                <div className="verification-row">
-                  <span>Total splits</span><span>₹{verification.totalSplit.toFixed(2)}</span>
-                </div>
-                <div className="verification-row diff">
-                  <span>Difference</span>
-                  <span className={verification.difference === 0 ? "ok" : "err"}>
-                    ₹{verification.difference.toFixed(2)}
-                    {verification.difference === 0 && " ✓"}
+            {/* Your Balance Summary */}
+            {(() => {
+              const myBalance = balancesData.find(b => String(b.user_id) === String(user.id))?.balance || 0;
+              return (
+                <div className={`balance-summary ${myBalance > 0 ? "positive" : myBalance < 0 ? "negative" : "zero"}`}>
+                  <span className="balance-summary-label">
+                    {myBalance > 0 ? "You are owed" : myBalance < 0 ? "You owe" : "All settled up"}
+                  </span>
+                  <span className="balance-summary-amount">
+                    {myBalance !== 0 && (myBalance > 0 ? "+" : "-")} ₹{Math.abs(myBalance).toFixed(2)}
                   </span>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {/* Net Balances */}
-            <h4 className="section-title">Net Balances</h4>
+            {/* Per-Person Balances */}
             <div className="balances-list">
-              {balancesData.map(b => (
+              {balancesData.filter(b => String(b.user_id) !== String(user.id)).map(b => (
                 <div key={b.user_id} className="balance-item">
                   <div className="user-avatar">{b.name?.[0]}</div>
-                  <div className="user-name">{b.name} {b.user_id === user.id && "(You)"}</div>
-                  <div className={`user-status ${b.balance > 0 ? "positive" : b.balance < 0 ? "negative" : ""}`}>
-                    {b.balance > 0
-                      ? `+ ₹${b.balance} (owed)`
-                      : b.balance < 0
-                        ? `- ₹${Math.abs(b.balance)} (owes)`
-                        : "Settled ✓"}
+                  <div className="balance-item-info">
+                    <div className="balance-item-name">{b.name}</div>
+                    <div className={`balance-item-detail ${b.balance < 0 ? "positive" : b.balance > 0 ? "negative" : "zero"}`}>
+                      {b.balance < 0
+                        ? `${b.name} owes you ₹${Math.abs(b.balance).toFixed(2)}`
+                        : b.balance > 0
+                          ? `You owe ${b.name} ₹${Math.abs(b.balance).toFixed(2)}`
+                          : "Settled up ✓"}
+                    </div>
+                  </div>
+                  <div className={`balance-item-amount ${b.balance < 0 ? "positive" : b.balance > 0 ? "negative" : "zero"}`}>
+                    {b.balance < 0 ? "+" : b.balance > 0 ? "-" : ""}₹{Math.abs(b.balance).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -312,14 +352,24 @@ export default function GroupDetails() {
             {/* Settlement Plan */}
             {settlementPlan.length > 0 && (
               <>
-                <h4 className="section-title">Settlement Plan (Simplify Debts)</h4>
+                <h4 className="section-title">Suggested payments</h4>
                 <div className="settlement-plan">
                   {settlementPlan.map((t, i) => (
-                    <div key={i} className="settlement-item">
+                    <div key={i} className="settlement-item" onClick={() => {
+                      setSettleForm({
+                        paid_by: t.from,
+                        paid_to: t.to,
+                        amount: t.amount,
+                        date: new Date().toISOString().split("T")[0],
+                        description: "",
+                      });
+                      setShowSettleModal(true);
+                    }}>
                       <span className="settle-from">{t.fromName}</span>
                       <span className="settle-arrow">pays</span>
                       <span className="settle-to">{t.toName}</span>
-                      <span className="settle-amount">₹{t.amount.toFixed(2)}</span>
+                      <span className="settle-badge">₹{t.amount.toFixed(2)}</span>
+                      <button className="settle-cta" title="Record this payment">Record</button>
                     </div>
                   ))}
                 </div>
@@ -374,7 +424,7 @@ export default function GroupDetails() {
                 <label>Paid By</label>
                 <select value={expenseForm.paid_by} onChange={e => setExpenseForm({...expenseForm, paid_by: e.target.value})}>
                   {currentGroup.members?.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} {m.id === user.id && "(You)"}</option>
+                    <option key={m.id} value={m.id}>{m.name} {m.email === user?.email && "(You)"}</option>
                   ))}
                 </select>
               </div>
@@ -395,7 +445,7 @@ export default function GroupDetails() {
                   {currentGroup.members?.map(m => (
                     <div key={m.id} className="split-input-row">
                       <span className="split-label">
-                        {m.name} {m.id === user.id && "(You)"} <strong>owes</strong>
+                        {m.name} {m.email === user?.email && "(You)"} <strong>owes</strong>
                       </span>
                       <div className="split-input-wrap">
                         <input
@@ -430,21 +480,33 @@ export default function GroupDetails() {
       {/* Settle Modal */}
       {showSettleModal && (
         <div className="modal-overlay" onClick={() => setShowSettleModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content settle-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Settle Up</h2>
+            <p className="settle-modal-hint">Record a payment between members to settle debts.</p>
             <form onSubmit={handleSettle}>
-              <div className="form-group" style={{ marginBottom: "16px" }}>
-                <label>Pay To</label>
-                <select value={settleForm.paid_to} onChange={e => setSettleForm({...settleForm, paid_to: e.target.value})} required>
-                  <option value="">Select a member</option>
-                  {currentGroup.members?.filter(m => m.id !== user.id).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
+              <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                <div className="form-group">
+                  <label>Payer</label>
+                  <select value={settleForm.paid_by} onChange={e => setSettleForm({...settleForm, paid_by: e.target.value})} required>
+                    <option value="">Select payer</option>
+                    {currentGroup.members?.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} {m.email === user?.email && "(You)"}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Receiver</label>
+                  <select value={settleForm.paid_to} onChange={e => setSettleForm({...settleForm, paid_to: e.target.value})} required>
+                    <option value="">Select receiver</option>
+                    {currentGroup.members?.filter(m => String(m.id) !== String(settleForm.paid_by)).map(m => (
+                      <option key={m.id} value={m.id}>{m.name} {m.email === user?.email && "(You)"}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
                 <div className="form-group">
-                  <label>Amount</label>
+                  <label>Amount (₹)</label>
                   <input type="number" step="0.01" value={settleForm.amount} onChange={e => setSettleForm({...settleForm, amount: e.target.value})} placeholder="0.00" required />
                 </div>
                 <div className="form-group">
@@ -452,9 +514,15 @@ export default function GroupDetails() {
                   <input type="date" value={settleForm.date} onChange={e => setSettleForm({...settleForm, date: e.target.value})} required />
                 </div>
               </div>
+              <div className="form-group" style={{ marginBottom: "16px" }}>
+                <label>Description (optional)</label>
+                <input type="text" value={settleForm.description} onChange={e => setSettleForm({...settleForm, description: e.target.value})} placeholder="e.g. UPI payment" />
+              </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-text" onClick={() => setShowSettleModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>Record Payment</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? <span className="spinner" /> : "Confirm Payment"}
+                </button>
               </div>
             </form>
           </div>

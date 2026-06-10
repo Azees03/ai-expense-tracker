@@ -9,5 +9,6 @@ export const groupAPI = {
   updateExpense:  (id, expId, data)=> client.put(`/groups/${id}/expenses/${expId}`, data),
   getBalances:    (id)           => client.get(`/groups/${id}/balances`),
   addSettlement:  (id, data)     => client.post(`/groups/${id}/settlements`, data),
+  deleteExpense:  (id, expId)    => client.delete(`/groups/${id}/expenses/${expId}`),
   getSimplifyDebts:(id)          => client.get(`/groups/${id}/simplify-debts`),
 };
